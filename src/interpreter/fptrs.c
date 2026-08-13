@@ -498,9 +498,9 @@ struct InstructionData ASL(unsigned char opcode) {
 struct InstructionData BRA(unsigned char opcode) {
     struct InstructionData id = newInstructionData();
     id.destinationType = 0x00;
-    id.destIdx = shouldBranch(opcode) ? -1 : PC; //TODO: In absorbing escrow, out of range location should mean "no register at all!"
-    id.value = GetRegisterValue(PC) + GetReadFromOpcode(opcode, &id);
-    return id;
+    id.destIdx = shouldBranch(opcode) ? PC : -1; 
+    id.value = GetRegisterValue(PC) + GetReadFromOpcode(opcode, &id) - 1; //Slowly starting to regret using the program counter to read all instruction bytes...
+    return id;                                                            //Fortunately, all conditional branches are the same size, so we can do this with little consequence!
 }
 
 struct InstructionData JSR(unsigned char opcode) {
@@ -512,6 +512,7 @@ struct InstructionData JSR(unsigned char opcode) {
     id.destIdx = PC;
     unsigned short additive = ((unsigned short)GetLoByte() << 8) | ((unsigned short)GetHiByte());
     id.value = NES_CART_ROM_MIN + additive;
+    id.cpuCyclesToBurn = 3;
     return id;
 }
 
