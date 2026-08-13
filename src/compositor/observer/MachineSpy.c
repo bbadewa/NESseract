@@ -1,13 +1,13 @@
-#include"../external/raylib.h"
+#include"../lib/raygui.h"
 #define RAYGUI_IMPLEMENTATION
-#include"../external/raygui.h"
+#include"../lib/raygui.h"
 
 #include<stdio.h>
 #include<unistd.h>
 #include<pthread.h>
 
-#include"../interpreter/CPU.h"
-#include"../interpreter/ROM.h"
+#include"../../interpreter/CPU.h"
+#include"../../interpreter/ROM.h"
 
 const char* flagNames[8] = {"Carry", "Zero", "Interrupt", "Decimal", "Break", "Constant", "Overflow", "Negative" };
 const char* Registers[6] = {"Program Counter", "Stack Pointer", "Accumulator", "Index X", "Index Y", "Flags"};
