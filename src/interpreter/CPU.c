@@ -121,6 +121,9 @@ void ProcessEscrow() {
                 default: 
                     break; 
             }
+        } else if (escrow.destinationType == 0x0F) { //Special condition for RTI (PC + Flag register.)
+            programCounter = escrow.value;
+            flagEscrow = escrow.destIdx;
         } else {
             unsigned char cVal = escrow.value;
             WriteToAddress(escrow.destIdx, &cVal, 1);

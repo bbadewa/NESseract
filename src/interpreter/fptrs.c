@@ -4,12 +4,7 @@
 #include"string.h"
 char operandFormatting[8];
 /*
-    I got a really stupid idea while looking at the table for the 6502 instruction set,
-    because I think that using a huge switch statement is ugly as sin.
-    So, why don't I make a memory pool 16x16x8 wide and then repropagate certain function pointers across certain
-    bounds, like the table does?
-
-    There are certain instructions that ... basically do the same thing that I can figure out upon execution, so
+    There are certain instructions that basically do the same thing that I can figure out upon execution, so
     I can just take a few function pointers (Store, No-Op, Load, Branch, Compare, Or, And, etc.) and then at execution
     time, based on the opcode position, figure out what the operands are supposed to be (Should I OR these two numbers or 
     a register? Should I store this number in the X or Y register? Should I load this immediate or absolute value?)
@@ -99,7 +94,6 @@ int determineInstructionSize(char opcode)
     locations defined by some of the functions, and to add CPU cycles based
     on registers indexed.
 
-
     The 6502 can fetch one byte and do operations all in one CPU cycle.
     So, we can dynamically determine how many CPU cycles to tack on in the reads.
 
@@ -140,6 +134,12 @@ The 6502 takes an extra cycle to process reads that jump a "page boundary".
 What that means is that if your base is some 0xAABB and adding some idx to it
 causes the upper bytes to add or decrement 1, then that "crosses the page boundary."
 So, to figure that out off the cuff:
+
+base: The base address.
+addition: what was added to it.
+
+TODO: This may be a bit crude, and will likely not cover all of our usecases.
+Consider re-factoring.
 */
 unsigned char hasCrossedPageBoundary(unsigned short base, unsigned short addition) {
     return (base & 0xFF00) == ((base + addition) & 0xFF00);
@@ -193,12 +193,10 @@ unsigned char ReadAbsolute(Register r, unsigned short idx, struct InstructionDat
 
 
 /*
-    So, it turns out that I am a flippin' twit and somewhere in my 
-    fever delirium I thought that I could use the same function for both decoding
-    what we'll call action registers (what register are we doing this function to?)
-    and read/write registers (if we're doing an indexed read/write, what register is the index?)
-    So, we're going to do a thing:
-
+   Decodes action registers (read: the register that we are doing an action to, de-generalizing
+   STA,STX,STY from STO, CMP, CPX,CPY from CMP).
+   Returns the action register (not the value, so feed this into GetRegisterValue() to actually
+   get any use from it!)
 */
 unsigned char GetActionRegisterFromOpcode(unsigned char opcode) {
     char upper = (opcode & 0xF0) >> 4;
@@ -289,6 +287,10 @@ unsigned char GetReadRegisterFromOpcode(unsigned char opcode) {
     
 }
 
+/*
+    Decides whether a branch should be taken based on the branch instruction.
+    Returns 1 if the branch should be taken, 0 if not.
+*/
 unsigned char shouldBranch(unsigned char opcode) {
     char upper = (opcode & 0xF0) >> 4;
     switch(upper) {
@@ -322,6 +324,10 @@ unsigned char shouldBranch(unsigned char opcode) {
     }
 }
 
+/*
+    Gets the write location from a certain opcode, and increments the cpuCyclesToBurn
+    in the corresponding InstructionData accordingly.
+*/
 unsigned short GetWriteFromOpcode(unsigned char opcode, struct InstructionData* out) {
     char upper = (opcode & 0xF0) >> 4;
     char lower = (opcode & 0x0F);
@@ -358,6 +364,10 @@ unsigned short GetWriteFromOpcode(unsigned char opcode, struct InstructionData* 
     return 0x0;
 }
 
+/*
+    Gets the read bytes from a certain opcode, and increments the cpuCyclesToBurn
+    in the corresponding InstructionData accordingly.
+*/
 unsigned char GetReadFromOpcode(unsigned char opcode, struct InstructionData* out) {
     char upper = (opcode & 0xF0) >> 4;
     char lower = (opcode & 0x0F);
@@ -407,13 +417,11 @@ unsigned char GetReadFromOpcode(unsigned char opcode, struct InstructionData* ou
 }
 
 /*
-Here's how we're going to do this:
+For the general structure of all instructions here:
 We're going to compute the value or instruction all at once, then return a struct from each instruction
 telling the CPU how many cycles to idle for, where to put a value, and what the value is.
 This way, we can avoid having to implement the digital logic in software and instead deal with the instruction
 however we want.
-
-
 */
 
 
@@ -571,7 +579,7 @@ struct InstructionData RTI(unsigned char opcode) {
     (void)opcode;
     struct InstructionData id = newInstructionData();
     id.destinationType = 0x0F; //PC + Flag Register
-    id.destIdx = ((unsigned char)PopFromStack(GetRegisterValue(SP), 1)) & 0xEF;
+    id.destIdx = ((unsigned char)PopFromStack(GetRegisterValue(SP), 1));
     SetRegister(SP, GetRegisterValue(SP) - 1);
     id.value = PopFromStack(GetRegisterValue(SP), 2); //TODO: this might be wrong...? Come back and reexamine
     SetRegister(SP, GetRegisterValue(SP) - 2);
