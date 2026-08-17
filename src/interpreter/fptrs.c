@@ -406,6 +406,7 @@ unsigned char GetReadFromOpcode(unsigned char opcode, struct InstructionData* ou
             return ReadIndirectIndexed(GetReadRegisterFromOpcode(opcode), GetHiByte(), out);   
         break;
         case 0x2: //The fact that there is ONE valid instruction in this column HAS to be ragebait.
+            snprintf(operandFormatting, 8, "$%02x", GetHiByte());
             return GetHiByte();
         break;
 

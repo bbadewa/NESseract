@@ -15,7 +15,7 @@ off of the MOS 6502, without the decimal mode.
 #define RY  0x04 //Register for Index Y
 #define FL  0x05 //Register for Flags.
 
-//CPU Flags.
+//CPU Flags, with the value being the distance from right.
 #define CARRY_FLAG 0x00
 #define ZERO_FLAG 0x01
 #define INT_FLAG 0x02
