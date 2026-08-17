@@ -12,22 +12,58 @@
 const char* flagNames[8] = {"Carry", "Zero", "Interrupt", "Decimal", "Break", "Constant", "Overflow", "Negative" };
 const char* Registers[6] = {"Program Counter", "Stack Pointer", "Accumulator", "Index X", "Index Y", "Flags"};
 
-void* CPURunner(void* nothing) {
-    (void)nothing; //For example, nothing. -Mbappe 2026
-    while (!WindowShouldClose()) {
-        Step();
-        sleep(1);
+char novelFlags = 0;
+char novelRegisters = 0;
+char flagRegThisCycle;
+char registerStateThisCycle[6][7]; //hehe
+
+void InitRegisterState() {
+    char def[7] = "0x0000";
+    for (int i = 0; i < 6; i++) {
+        strncpy_s(registerStateThisCycle[i], 7, def, 7);
     }
 }
 
+void* CPURunner(void* nothing) {
+    (void)nothing; //For example, nothing. -Mbappe 2026
+    char tempflags = 0;
+    char tempRegister[7];
+    while (!WindowShouldClose()) {
+        Step();
+        sleep(1);
+        novelFlags = 0;
+        novelRegisters = 0;
+        tempflags = GetRegisterValue(FL);
+        //CPU flags;
+        for (int i = 0; i < 8; i++) {
+            if (((flagRegThisCycle >> i) & 1) != ((tempflags >> i) & 1)) { //Check new flags against last cycle's flags
+                novelFlags |= (1 << i);
+            }
+        }
+    
+        //CPU registers;
+        for (int i = 0; i < 6; i++) {
+            snprintf(tempRegister, 7, "0x%04X", GetRegisterValue(i));
+            if (strncmp(tempRegister, registerStateThisCycle[i], 7) != 0) {
+                strncpy(registerStateThisCycle[i], tempRegister, 7);
+                novelRegisters |= (1 << i);
+            }
+            
+        }
+        flagRegThisCycle = tempflags;
+    } 
+
+}
+
 int main() {
+    InitRegisterState();
     LoadROM("../testroms/example.bin");
     CPUInit();
     InitWindow(800,650, "NESseract (MachineSpy 6502 mode)");
     SetTargetFPS(60);
 
     char currentByte[5];
-    char registerStateThisFrame[6][7]; //hehe
+    
     unsigned char haltResult = 0;
 
     pthread_t CPUThreadHandle;
@@ -45,21 +81,23 @@ int main() {
 
             //CPU flags;
             for (int i = 0; i < 8; i++) {
+                    GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, ColorToInt((novelFlags >> i) & 1 ? RED : GRAY));
                     GuiSetStyle(DEFAULT, TEXT_SIZE, 12);
                     GuiLabel((Rectangle){10 + (i * 100), 50, 80,50},flagNames[7-i]);
                     GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
-                    GuiLabel((Rectangle){25 + (i * 100), 25, 50,50},GetCPUFlag(7-i) ? "1" : "0");
+                    GuiLabel((Rectangle){25 + (i * 100), 25, 50,50},(flagRegThisCycle >> i) & 1 ? "1" : "0");
             }
-            
+            GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, ColorToInt(GRAY));
             //CPU registers;
             for (int i = 0; i < 6; i++) {
+                GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, ColorToInt((((novelRegisters >> i) & 1) && i != 0) ? RED : GRAY));
                 GuiSetStyle(DEFAULT, TEXT_SIZE, 12);
                 GuiLabel((Rectangle){10 ,100 + (i * 50), 120, 50},Registers[i]);
-                snprintf(registerStateThisFrame[i], 7, "0x%04X", GetRegisterValue(i));
                 GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
-                GuiLabel((Rectangle){140, 100 + (i * 50), 80, 50},registerStateThisFrame[i]);
+                GuiLabel((Rectangle){140, 100 + (i * 50), 80, 50},registerStateThisCycle[i]);
             }
 
+            GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, ColorToInt(GRAY));
             GuiSetStyle(DEFAULT, TEXT_SIZE, 24);
             GuiLabel((Rectangle){10, 375, 300,90}, "Current Instruction");
 
