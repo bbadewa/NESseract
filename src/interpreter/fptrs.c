@@ -730,8 +730,8 @@ struct InstructionData INR(unsigned char opcode) {
     id.destinationType = 0x00;
     id.destIdx = reg;
     id.value =  GetRegisterValue(reg) + 1;
-    SetCPUFlag(ZERO_FLAG, GetRegisterValue(ACC) == 0);
-    SetCPUFlag(NEGATIVE_FLAG, GetRegisterValue(ACC) >> 7);
+    SetCPUFlag(ZERO_FLAG, GetRegisterValue(reg) == 0);
+    SetCPUFlag(NEGATIVE_FLAG, GetRegisterValue(reg) >> 7);
     id.cpuCyclesToBurn = 1;
     return id;
 }
