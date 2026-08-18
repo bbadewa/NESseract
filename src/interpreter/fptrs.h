@@ -34,6 +34,7 @@ struct InstructionData PUL(unsigned char opcode); //Pull register from the stack
 struct InstructionData INR(unsigned char opcode); //Increment Register (INX,INY)
 struct InstructionData DER(unsigned char opcode); //Decrement Register (DEX,DEY)
 struct InstructionData INV(unsigned char opcode); //Invalid operation opcode
+struct InstructionData HLT(unsigned char opcode);
 
 
 

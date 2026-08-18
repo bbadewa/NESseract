@@ -10,7 +10,7 @@ char operandFormatting[8];
     a register? Should I store this number in the X or Y register? Should I load this immediate or absolute value?)
 */
 struct InstructionData (*fptrPool[256])(unsigned char) = {
-    BRK,ORA,INV,INV,NOP,ORA,ASL,INV,PUS,ORA,ASL,INV,NOP,ORA,ASL,INV,
+    BRK,ORA,HLT,INV,NOP,ORA,ASL,INV,PUS,ORA,ASL,INV,NOP,ORA,ASL,INV,
     BRA,ORA,INV,INV,NOP,ORA,ASL,INV,CLR,ORA,NOP,INV,NOP,ORA,ASL,INV,
     JSR,AND,INV,INV,BIT,AND,ROL,INV,PUL,AND,ROL,INV,BIT,AND,ROL,INV,
     BRA,AND,INV,INV,NOP,AND,ROL,INV,SET,AND,NOP,INV,NOP,AND,ROL,INV,
@@ -30,7 +30,7 @@ struct InstructionData (*fptrPool[256])(unsigned char) = {
 };
 
 char ProperInstructionNames[256][4] = {
-    "BRK","ORA","KIL","SLO","NOP","ORA","ASL","SLO","PHP","ORA","ASL","ANC","NOP","ORA","ASL","SLO",
+    "BRK","ORA","HLT","SLO","NOP","ORA","ASL","SLO","PHP","ORA","ASL","ANC","NOP","ORA","ASL","SLO",
     "BPL","ORA","KIL","SLO","NOP","ORA","ASL","SLO","CLC","ORA","NOP","SLO","NOP","ORA","ASL","SLO",
     "JSR","AND","KIL","RLA","BIT","AND","ROL","RLA","PLP","AND","ROL","ANC","BIT","AND","ROL","RLA",
     "BMI","AND","KIL","RLA","NOP","AND","ROL","RLA","SEC","AND","NOP","RLA","NOP","AND","ROL","RLA",
@@ -53,13 +53,14 @@ struct InstructionData ExecuteInstruction(unsigned char opcode)
     struct InstructionData escrow = fptrPool[opcode](opcode);  
     sprintf(escrow.fullInstruction, "%s %s\n", ProperInstructionNames[opcode], operandFormatting);
     memset(operandFormatting, 0, 8);
+    printf(escrow.fullInstruction);
     return escrow;
 }
 
 int determineInstructionSize(char opcode)
 {
-    char highNibble = (opcode | 0x0F) >> 4;
-    char lowNibble = (opcode & 0x0F);
+    unsigned char highNibble = (opcode | 0x0F) >> 4;
+    unsigned char lowNibble = (opcode & 0x0F);
 
     switch(lowNibble) {
         case 0x0C:
@@ -74,9 +75,10 @@ int determineInstructionSize(char opcode)
         case 0x1:
             return 2;
             break;
-        case 0x0:
+        case 0x0: //rel/abs/imm
             if (opcode == 0x20) {return 3;}
-            return 1 + (highNibble & 0x01 ? 2 : 0);
+            int oddSize = highNibble >= 8 ? 1 : 0;
+            return 1 + (highNibble & 0x01 ? 2 : oddSize);
             break;
         case 0x8:
         case 0xA:
@@ -340,24 +342,24 @@ unsigned short GetWriteFromOpcode(unsigned char opcode, struct InstructionData* 
         return 0x0;
     }
     if (lower >= 0x04 && lower <= 0x07) { //zp/zpx/zpy
-        snprintf(operandFormatting, 8, "$%02x", GetHiByte());
+        snprintf(operandFormatting, 8, "$%02X", GetHiByte());
         return 
         (lowerOdd ? ((unsigned char)GetRegisterValue(GetReadRegisterFromOpcode(opcode))) : 0) + GetHiByte();
     }
     if (lower >= 0x0C && lower <= 0x0F) { //abs/abx/aby
-        snprintf(operandFormatting, 8, "$%04x", absAddr);
+        snprintf(operandFormatting, 8, "$%04X", absAddr);
         return absAddr;
     }
     if (lower == 0x9) { //imm/aby
-        snprintf(operandFormatting, 8, upperOdd ? "$%04x" : "$%02x", upperOdd ? absAddr : GetHiByte());
+        snprintf(operandFormatting, 8, upperOdd ? "$%04X" : "$%02X", upperOdd ? absAddr : GetHiByte());
         return upperOdd ? absAddr : GetHiByte();
     }
     if (lower == 0x0) { //abs/rel
-        snprintf(operandFormatting, 8, "$%04x", absAddr);
+        snprintf(operandFormatting, 8, "$%04X", absAddr);
         return (upperOdd ? GetRegisterValue(PC) : 0) + absAddr;
     }
     if (lower == 0x1) { //izx/izy
-        snprintf(operandFormatting, 8, "$%02x", GetHiByte());
+        snprintf(operandFormatting, 8, "$%02X", GetHiByte());
         unsigned char ptr = GetReadRegisterFromOpcode(opcode) + GetHiByte();
         return ReadShortFromAddress(ptr);
     }
@@ -382,31 +384,36 @@ unsigned char GetReadFromOpcode(unsigned char opcode, struct InstructionData* ou
         case 0x04:
         case 0x05:
         case 0x06: //zp/zpx/zpy
-            snprintf(operandFormatting, 8, "$%02x", GetHiByte());
+            snprintf(operandFormatting, 8, "$%02X", GetHiByte());
             return ReadZeroPage(GetReadRegisterFromOpcode(opcode), GetHiByte(), out);
         break;
 
         case 0x0C:
         case 0x0D:
         case 0x0E: //abs/abx/aby
-            snprintf(operandFormatting, 8, "$%04x", absAddr);
+            snprintf(operandFormatting, 8, "$%04X", absAddr);
             return ReadAbsolute(GetReadRegisterFromOpcode(opcode),absAddr, out);        
         break;
         case 0x9: //imm/aby
-            snprintf(operandFormatting, 8, (upper & 0x1) ? "$%04x" : "$%02x", (upper & 0x1) ? absAddr : GetHiByte());
+            snprintf(operandFormatting, 8, (upper & 0x1) ? "$%04X" : "$%02X", (upper & 0x1) ? absAddr : GetHiByte());
             return (upper & 0x1) ? ReadAbsolute(GetReadRegisterFromOpcode(opcode), absAddr, out) : GetHiByte();
         break;
-        case 0x0: //abs/rel
-            snprintf(operandFormatting, 8, "$%04x", absAddr);
+        case 0x0: //imm/rel/abs
+        if (opcode == 0x02 || upper & 0x01) { //rel/abs
+            snprintf(operandFormatting, 8, "$%04X", absAddr);
             return ReadAbsolute((upper & 0x1) ? PC : -1, absAddr, out);
+        } else { //imm
+            snprintf(operandFormatting, 8, "$%02X", GetHiByte());
+            return GetHiByte();
+        }
         break;
         case 0x1: //izx/izy
-            snprintf(operandFormatting, 8, "$%02x", GetHiByte());
+            snprintf(operandFormatting, 8, "$%02X", GetHiByte());
             out->cpuCyclesToBurn += 4;
             return ReadIndirectIndexed(GetReadRegisterFromOpcode(opcode), GetHiByte(), out);   
         break;
         case 0x2: //The fact that there is ONE valid instruction in this column HAS to be ragebait.
-            snprintf(operandFormatting, 8, "$%02x", GetHiByte());
+            snprintf(operandFormatting, 8, "$%02X", GetHiByte());
             return GetHiByte();
         break;
 
@@ -749,5 +756,11 @@ struct InstructionData DER(unsigned char opcode) {
 struct InstructionData INV(unsigned char opcode) {
     snprintf(operandFormatting, 8, "INVALID");
     (void)opcode;
+    return newInstructionData();
+}
+
+struct InstructionData HLT(unsigned char opcode) {
+    (void)opcode;
+    SetHaltFlag();
     return newInstructionData();
 }
