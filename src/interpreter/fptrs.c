@@ -80,8 +80,8 @@ int determineInstructionSize(char opcode)
             break;
         case 0x0: //rel/abs/imm
             if (opcode == 0x20) {return 3;}
-            int oddSize = highNibble >= 8 ? 1 : 0;
-            return 1 + (highNibble & 0x01 ? 2 : oddSize);
+            if (opcode == 0x00 || opcode == 0x40 || opcode == 0x60) {return 1;}
+            return 2;
             break;
         case 0x8:
         case 0xA:
@@ -519,8 +519,10 @@ struct InstructionData BRA(unsigned char opcode) {
     struct InstructionData id = newInstructionData();
     id.destinationType = 0x00;
     id.destIdx = shouldBranch(opcode) ? PC : -1; 
-    id.value = GetRegisterValue(PC) + GetReadFromOpcode(opcode, &id) - 1; //Slowly starting to regret using the program counter to read all instruction bytes...
-    return id;                                                            //Fortunately, all conditional branches are the same size, so we can do this with little consequence!
+    id.value = GetRegisterValue(PC) + GetHiByte(); //Slowly starting to regret using the program counter to read all instruction bytes...
+    id.cpuCyclesToBurn += (id.destIdx == PC);
+    snprintf(operandFormatting, 8, "$%04X", id.value); //Fortunately, all conditional branches are the same size, so we can do this with little consequence!
+    return id;                                                            
 }
 
 struct InstructionData JSR(unsigned char opcode) {

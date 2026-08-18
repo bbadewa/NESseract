@@ -88,7 +88,6 @@ int Step() {
         sleepCycles--;
         if (!sleepCycles) {
             ProcessEscrow();
-            cpuFlags = flagEscrow;
         }
     }
     cycles++;
@@ -130,6 +129,7 @@ void ProcessEscrow() {
         }
         escrow = newInstructionData();
     }
+    cpuFlags = flagEscrow;
 }
 
 unsigned int totalCPUCycles()
@@ -217,7 +217,7 @@ void SetCPUFlag(unsigned char flag, unsigned char value) {
     if (value) {
         flagEscrow |= (value << flag);
     } else {
-        flagEscrow &= ~(value << flag);
+        flagEscrow &= ~(1 << flag);
     }
 }
 
