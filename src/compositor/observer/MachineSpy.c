@@ -24,42 +24,49 @@ void InitRegisterState() {
     }
 }
 
-void* CPURunner(void* nothing) {
-    (void)nothing; //For example, nothing. -Mbappe 2026
+int UpdateCPUState() {
     char tempflags = 0;
     char tempRegister[7];
-    while (!WindowShouldClose()) {
-        Step();
-        sleep(1);
-        novelFlags = 0;
-        novelRegisters = 0;
-        tempflags = GetRegisterValue(FL);
-        //CPU flags;
-        for (int i = 0; i < 8; i++) {
-            if (((flagRegThisCycle >> i) & 1) != ((tempflags >> i) & 1)) { //Check new flags against last cycle's flags
-                novelFlags |= (1 << i);
-            }
+
+    int cpuState = Step();
+    novelFlags = 0;
+    novelRegisters = 0;
+    tempflags = GetRegisterValue(FL);
+    //CPU flags;
+    for (int i = 0; i < 8; i++) {
+        if (((flagRegThisCycle >> i) & 1) != ((tempflags >> i) & 1)) { //Check new flags against last cycle's flags
+            novelFlags |= (1 << i);
         }
+    }
+
+    //CPU registers;
+    for (int i = 0; i < 6; i++) {
+        snprintf(tempRegister, 7, "0x%04X", GetRegisterValue(i));
+        if (strncmp(tempRegister, registerStateThisCycle[i], 7) != 0) {
+            strncpy(registerStateThisCycle[i], tempRegister, 7);
+            novelRegisters |= (1 << i);
+        }
+        
+    }
+    flagRegThisCycle = tempflags;
+    return cpuState;
+}
+
+void* CPURunner(void* nothing) {
+    (void)nothing; //For example, nothing. -Mbappe 2026
     
-        //CPU registers;
-        for (int i = 0; i < 6; i++) {
-            snprintf(tempRegister, 7, "0x%04X", GetRegisterValue(i));
-            if (strncmp(tempRegister, registerStateThisCycle[i], 7) != 0) {
-                strncpy(registerStateThisCycle[i], tempRegister, 7);
-                novelRegisters |= (1 << i);
-            }
-            
-        }
-        flagRegThisCycle = tempflags;
+    while (!WindowShouldClose()) {
+        sleep(1);
+        UpdateCPUState();
     } 
 
 }
 
 int main() {
     InitRegisterState();
-    LoadROM("../testroms/example.bin");
+    LoadROM("../testroms/coin/1_Example.nes");
     CPUInit();
-    InitWindow(800,650, "NESseract (MachineSpy 6502 mode)");
+    InitWindow(800,650, "NESseract (MachineSpy RP2A03 mode)");
     SetTargetFPS(60);
 
     char currentByte[5];
@@ -105,7 +112,7 @@ int main() {
             GuiLabel((Rectangle){70, 425, 300,90}, GetLastInstruction());
 
             if(GuiButton((Rectangle){30,500, 150,45}, "Step") && !haltResult) {
-                haltResult = Step();
+                haltResult = UpdateCPUState();
             }
             GuiSetStyle(DEFAULT, TEXT_SIZE, 24);
             GuiLabel((Rectangle){10, 520, 300,90}, "Current Byte");
