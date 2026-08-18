@@ -9,7 +9,7 @@ unsigned char OAMaddr;
 unsigned char OAMdata;
 unsigned char scroll;
 unsigned char addr;
-unsigned char data;
+unsigned char ppuData;
 
 /*
     The PPU has two quirky registers: PPUSCROLL and PPUADDR.
@@ -55,7 +55,7 @@ unsigned char GetPPURegister(enum PPURegister PPUReg)
             return addr;
         break;
         case PPUDATA:
-            return data;
+            return ppuData;
         break;
 
         default:
@@ -89,7 +89,7 @@ void StoreInPPURegister(enum PPURegister PPUReg, unsigned char data)
             addr = data;
         break;
         case PPUDATA:
-            data = data;
+            ppuData = data;
         break;
 
         default:

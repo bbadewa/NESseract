@@ -8,6 +8,9 @@ char operandFormatting[8];
     I can just take a few function pointers (Store, No-Op, Load, Branch, Compare, Or, And, etc.) and then at execution
     time, based on the opcode position, figure out what the operands are supposed to be (Should I OR these two numbers or 
     a register? Should I store this number in the X or Y register? Should I load this immediate or absolute value?)
+
+    Technically, implementing the instructions individually whole-hog is more CPU-efficient, but we're writing this for fun,
+    aren't we?
 */
 struct InstructionData (*fptrPool[256])(unsigned char) = {
     BRK,ORA,HLT,INV,NOP,ORA,ASL,INV,PUS,ORA,ASL,INV,NOP,ORA,ASL,INV,
@@ -475,6 +478,7 @@ struct InstructionData STO(unsigned char opcode) {
     id.destinationType = 0xFF;
     id.destIdx = GetWriteFromOpcode(opcode, &id);
     id.value = GetRegisterValue(GetActionRegisterFromOpcode(opcode));
+    id.cpuCyclesToBurn++; 
     return id;
 }
 
