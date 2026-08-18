@@ -5,7 +5,7 @@ This CPU is based off of the NTSC-variant NES' RP2A03 chip's CPU, which, in turn
 off of the MOS 6502, without the decimal mode.
 */
 
-#define BASE_6502_EMU 1 //For testing purposes: Are we executing a basic 6502 program or a NES rom?
+#define BASE_6502_EMU 0 //For testing purposes: Are we executing a basic 6502 program or a NES rom?
 
 //Registers.
 #define PC  0x00 //Register for Program counter.
