@@ -59,7 +59,6 @@ void CPUInit()
 
 int Step() {
     if (haltFlag) {return haltFlag;}
-    printf("--- CYCLE %d ---\n", cycles);
     if (sleepCycles == 0) {
         if (bytesLeft) {
             bytesLeft--;
@@ -84,7 +83,7 @@ int Step() {
             currentReadMode = Opcode;
         }
     } else {
-        printf("Sleeping for %d extra cycles to emulate accuracy... \n", sleepCycles);
+        //printf("Sleeping for %d extra cycles to emulate accuracy... \n", sleepCycles);
         sleepCycles--;
         if (!sleepCycles) {
             ProcessEscrow();

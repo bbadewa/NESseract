@@ -56,7 +56,7 @@ void* CPURunner(void* nothing) {
     (void)nothing; //For example, nothing. -Mbappe 2026
     
     while (!WindowShouldClose()) {
-        sleep(1);
+        usleep(3000);
         UpdateCPUState();
     } 
 
@@ -64,7 +64,8 @@ void* CPURunner(void* nothing) {
 
 int main() {
     InitRegisterState();
-    LoadROM("../testroms/coin/1_Example.nes");
+    SetTraceLogLevel(LOG_NONE);
+    LoadROM("../testroms/coin/5_Instructions1.nes");
     CPUInit();
     InitWindow(800,650, "NESseract (MachineSpy RP2A03 mode)");
     SetTargetFPS(60);

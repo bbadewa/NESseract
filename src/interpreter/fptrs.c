@@ -54,9 +54,10 @@ char ProperInstructionNames[256][4] = {
 struct InstructionData ExecuteInstruction(unsigned char opcode)
 {
     struct InstructionData escrow = fptrPool[opcode](opcode);  
-    sprintf(escrow.fullInstruction, "%s %s\n", ProperInstructionNames[opcode], operandFormatting);
+    sprintf(escrow.fullInstruction, "%s %s ", ProperInstructionNames[opcode], operandFormatting);
     memset(operandFormatting, 0, 8);
     printf(escrow.fullInstruction);
+    printf("(%d)\n", totalCPUCycles());
     return escrow;
 }
 
@@ -533,7 +534,8 @@ struct InstructionData JSR(unsigned char opcode) {
     id.destinationType = 0x00;
     id.destIdx = PC;
     unsigned short additive = ((unsigned short)GetLoByte() << 8) | ((unsigned short)GetHiByte());
-    id.value = NES_CART_ROM_MIN + additive;
+    id.value = BASE_6502_EMU ? NES_CART_ROM_MIN + additive : additive;
+    snprintf(operandFormatting, 8, "$%04X", id.value);
     id.cpuCyclesToBurn = 3;
     return id;
 }
@@ -637,7 +639,7 @@ struct InstructionData JMP(unsigned char opcode) {
     struct InstructionData id = newInstructionData();
     id.destinationType = 0x00;
     id.destIdx = PC;
-    id.value = GetRegisterValue(PC) + GetReadFromOpcode(opcode, &id);
+    id.value = ((unsigned short)GetLoByte() << 8) | ((unsigned short)GetHiByte());
     return id;
 }
 struct InstructionData TRA(unsigned char opcode) {
