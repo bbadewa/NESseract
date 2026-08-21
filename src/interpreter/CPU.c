@@ -18,7 +18,7 @@ unsigned char indexY;
 unsigned char haltFlag = 0; //This is for 6502-based testing purposes, we'll set this when we hit a BRK instruction. 
 unsigned char cpuFlags = 32;
 unsigned char flagEscrow = 32; //This will be set during an instruction's duration and propagated to cpuFlags at the end.
-unsigned int cycles = 0;
+unsigned long long cycles = 0;
 unsigned int sleepCycles;
 unsigned int bytesLeft;
 enum ReadMode currentReadMode;
@@ -132,7 +132,7 @@ void ProcessEscrow() {
     cpuFlags = flagEscrow;
 }
 
-unsigned int totalCPUCycles()
+unsigned long long totalCPUCycles()
 {
     return cycles;
 }

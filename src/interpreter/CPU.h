@@ -76,4 +76,4 @@ unsigned char GetLastByte();
 unsigned char GetHiByte();
 unsigned char GetLoByte();
 void CPUInit();
-unsigned int totalCPUCycles();
+unsigned long long totalCPUCycles();
