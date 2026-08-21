@@ -4,6 +4,7 @@ set(CMAKE_C_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)
 
 project(NESseract C)
+include(CTest)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)

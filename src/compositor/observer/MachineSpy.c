@@ -85,7 +85,7 @@ int main() {
             GuiSetStyle(DEFAULT, TEXT_SIZE, 24);
             DrawRectangle(0,0,800,800,RAYWHITE);
             
-            GuiLabel((Rectangle){250,0,400,50},BASE_6502_EMU ? "Running in stock 6502 mode" : "Running in NTSC NES mode");
+            GuiLabel((Rectangle){250,0,400,50}, GetEmulationMode() ? "Running in stock 6502 mode" : "Running in NTSC NES mode");
 
             //CPU flags;
             for (int i = 0; i < 8; i++) {

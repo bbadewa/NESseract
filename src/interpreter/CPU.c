@@ -7,6 +7,7 @@ unsigned char lowByte;
 unsigned char highByte;
 unsigned char opcode;
 
+unsigned char EMULATION_MODE = NES_EMU;
 unsigned short programCounter;
 unsigned short IRQ;
 unsigned short NMI;
@@ -37,7 +38,7 @@ unsigned char GetLastByte() {
 
 void CPUInit()
 {
-    if (BASE_6502_EMU) {
+    if (EMULATION_MODE == MOS_6502_EMU) {
         programCounter = 0x8000;
     } else {
         NMI = ReadShortFromAddress(0xFFFA);
@@ -138,6 +139,15 @@ unsigned int totalCPUCycles()
 
 void SetHaltFlag() {
     haltFlag = 1;
+}
+
+void SetEmulationMode(unsigned char mode)
+{
+    EMULATION_MODE = mode;
+}
+
+unsigned char GetEmulationMode() {
+    return EMULATION_MODE;
 }
 
 void Execute(unsigned char opcode) {

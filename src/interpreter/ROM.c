@@ -26,7 +26,7 @@ int LoadROM(char* filepath) {
 }
 
 unsigned char ReadFromROM(unsigned short idx) { 
-    return *((unsigned char*)ROM + (idx -  (BASE_6502_EMU ? 0x8000 : 0x7FF0)));
+    return *((unsigned char*)ROM + (idx -  (GetEmulationMode() ? 0x8000 : 0x7FF0)));
 }
 
 void UnloadROM() {

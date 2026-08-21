@@ -534,7 +534,7 @@ struct InstructionData JSR(unsigned char opcode) {
     id.destinationType = 0x00;
     id.destIdx = PC;
     unsigned short additive = ((unsigned short)GetLoByte() << 8) | ((unsigned short)GetHiByte());
-    id.value = BASE_6502_EMU ? NES_CART_ROM_MIN + additive : additive;
+    id.value = GetEmulationMode() ? NES_CART_ROM_MIN + additive : additive;
     snprintf(operandFormatting, 8, "$%04X", id.value);
     id.cpuCyclesToBurn = 3;
     return id;
